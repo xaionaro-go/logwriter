@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/facebookincubator/go-belt/tool/logger"
-	"github.com/xaionaro-go/observability"
 	"github.com/xaionaro-go/xsync"
 )
 
 type logWriter struct {
 	Logger       logger.Logger
+	LogLevel     logger.Level
 	Buffer       bytes.Buffer
 	BufferLocker xsync.Mutex
 }
@@ -24,9 +24,11 @@ var _ io.Writer = (*logWriter)(nil)
 func NewLogWriter(
 	ctx context.Context,
 	logger logger.Logger,
+	logLevel logger.Level,
 ) *logWriter {
 	l := &logWriter{
-		Logger: logger,
+		Logger:   logger,
+		LogLevel: logLevel,
 	}
 	go l.flusher(ctx)
 	return l
@@ -62,7 +64,7 @@ func (l *logWriter) Flush() {
 		return
 	}
 
-	l.Logger.Logf(observability.LogLevelFilter.Level, "%s", s)
+	l.Logger.Logf(l.LogLevel, "%s", s)
 }
 
 var logrusPrefix = []byte{0x1b, 0x5b}
